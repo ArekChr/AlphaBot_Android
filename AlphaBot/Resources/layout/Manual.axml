@@ -1,7 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-</LinearLayout>
+    android:layout_height="match_parent"
+    android:id="@+id/gridLayout1"
+    android:rowCount="3"
+    android:columnCount="3">
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:visibility="invisible"
+        android:text="Button"
+        android:id="@+id/button1" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:text="UP"
+        android:id="@+id/UP" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:visibility="invisible"
+        android:text="Button"
+        android:id="@+id/button3" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:text="LEFT"
+        android:id="@+id/LEFT" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:visibility="invisible"
+        android:text="Button"
+        android:id="@+id/button4" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:text="RIGHT"
+        android:id="@+id/RIGHT" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:visibility="invisible"
+        android:text="Button"
+        android:id="@+id/button7" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:text="DOWN"
+        android:id="@+id/DOWN" />
+    <Button
+        android:layout_columnWeight="1"
+        android:layout_rowWeight="1"
+        android:visibility="invisible"
+        android:text="Button"
+        android:id="@+id/button9" />
+</GridLayout>

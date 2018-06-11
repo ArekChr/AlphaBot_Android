@@ -5,8 +5,10 @@ using Android.OS;
 using Android.Support.V7.App;
 using Android.Views;
 using Android.Widget;
+using Java.Lang;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AlphaBot
 {
@@ -14,7 +16,6 @@ namespace AlphaBot
     public class MainActivity : AppCompatActivity
     {
         private Singleton objSingle = Singleton.Instance;
-        private BluetoothSocket _socket = null;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -32,7 +33,7 @@ namespace AlphaBot
             send.Click += Send_Click;
             if(objSingle.bluetoothAdapter.thisAdapter == null)
             {
-                Toast.MakeText(this, "No Bluetooth adapter found.", Android.Widget.ToastLength.Long).Show();
+                Toast.MakeText(this, "No Bluetooth adapter found.", ToastLength.Long).Show();
             }
             if (!objSingle.bluetoothAdapter.thisAdapter.IsEnabled)
             {
@@ -53,38 +54,69 @@ namespace AlphaBot
             int id = item.ItemId;
             if(id == Resource.Id.connect)
             {
-                //Toast.MakeText(this, "Connecting...", Android.Widget.ToastLength.Long).Show();
+                Toast.MakeText(this, "Connecting...", ToastLength.Short).Show();
                 objSingle.bluetoothAdapter.getDevice();
 
-                if(objSingle.bluetoothAdapter.thisDevice == null)
+                if (objSingle.bluetoothAdapter.thisAdapter.Name != "HC-05")
                 {
-                    Toast.MakeText(this, "Named device not found.", Android.Widget.ToastLength.Long).Show();
+                    Toast.MakeText(this, "AlphaBot not found.", ToastLength.Long).Show();
+                    return true;
                 }
 
-                objSingle.bluetoothAdapter.thisSocket = 
-                     objSingle
-                    .bluetoothAdapter
-                    .thisDevice
-                    .CreateRfcommSocketToServiceRecord(Java.Util.UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
+                try
+                {
+                    objSingle.bluetoothAdapter.thisSocket =
+                         objSingle
+                        .bluetoothAdapter
+                        .thisDevice
+                        .CreateRfcommSocketToServiceRecord(
+                             Java.Util.UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
+                    Task.Run(() =>
+                    {
+                        objSingle.bluetoothAdapter.thisSocket.ConnectAsync();
+                        this.RunOnUiThread(() =>
+                        {
+                            if (objSingle.bluetoothAdapter.thisSocket.IsConnected)
+                            {
+                                Toast.MakeText(this, "Connected succesfull.", ToastLength.Short).Show();
+                            }
+                            else
+                            {
+                                Toast.MakeText(this, "Connection failed.", ToastLength.Short).Show();
+                            }
+                        });
+                    });     
+                }
+                catch(System.Exception ex)
+                {
+                    Toast.MakeText(this, "Error.", ToastLength.Short).Show();
+                }
 
-                
                 return true;
             }
             else if(id == Resource.Id.manual)
             {
+                var manualActivity = new Intent(this, typeof(ManualActivity));
+                this.StartActivity(manualActivity);
                 return true;
             }
             return true;
         }
 
-        private void Send_Click(object sender, System.EventArgs e)
+        private void Send_Click(object sender, EventArgs e)
         {
             TextView PosX = FindViewById<TextView>(Resource.Id.posx);
             TextView PosY = FindViewById<TextView>(Resource.Id.posy);
 
+            if(objSingle.bluetoothAdapter.thisSocket == null)
+            {
+                Toast.MakeText(this, "Device is not connected.", ToastLength.Long).Show();
+                return;
+            }
+            
             if (string.IsNullOrEmpty(PosX.Text) && string.IsNullOrEmpty(PosY.Text) || PosX.Text == "0" && PosY.Text == "0")
             {
-                Toast.MakeText(this, "Can not send empty value.", Android.Widget.ToastLength.Long).Show();
+                Toast.MakeText(this, "Can not send empty value.", ToastLength.Long).Show();
             }
             else
             {
@@ -107,19 +139,15 @@ namespace AlphaBot
 
                 try
                 {
-                    objSingle.bluetoothAdapter.thisSocket.Connect();
                     byte[] text = Encoding.ASCII.GetBytes(Coordinates);
                     objSingle.bluetoothAdapter.thisSocket.OutputStream.Write(text, 0, text.Length);
-                    objSingle.bluetoothAdapter.thisSocket.OutputStream.Close();
-
-                    Toast.MakeText(this, "Coordinates sent: " + Coordinates, Android.Widget.ToastLength.Long).Show();
+                    Toast.MakeText(this, "Coordinates sent: " + Coordinates, ToastLength.Long).Show();
                 }
-                catch (Exception outPutEX)
+                catch (Java.Lang.Exception outPutEX)
                 {
-                    Toast.MakeText(this, $"Error: {outPutEX}" + Coordinates, Android.Widget.ToastLength.Long).Show();
+                    Toast.MakeText(this, $"Error: {outPutEX}" + Coordinates, ToastLength.Short).Show();
                 }
 
-                
                 Coordinates = "";
             }
         }
