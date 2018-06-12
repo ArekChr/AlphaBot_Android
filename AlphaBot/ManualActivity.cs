@@ -80,14 +80,21 @@ namespace AlphaBot
 
         private void SendCommand(string command)
         {
-            if (objSingle.bluetoothAdapter.thisSocket != null)
+            try
             {
-                byte[] text = Encoding.ASCII.GetBytes(command);
-                objSingle.bluetoothAdapter.thisSocket.OutputStream.Write(text, 0, text.Length);
+                if (objSingle.bluetoothAdapter.thisSocket.IsConnected)
+                {
+                    byte[] text = Encoding.ASCII.GetBytes(command);
+                    objSingle.bluetoothAdapter.thisSocket.OutputStream.Write(text, 0, text.Length);
+                }
+                else
+                {
+                    Toast.MakeText(this, "Device is not connected.", ToastLength.Short).Show();
+                }
             }
-            else
+            catch
             {
-                Toast.MakeText(this, "Device is not connected.", ToastLength.Long).Show();
+                Toast.MakeText(this, "Device is not connected.", ToastLength.Short).Show();
             }
         }
     }

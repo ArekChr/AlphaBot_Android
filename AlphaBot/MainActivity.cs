@@ -5,8 +5,8 @@ using Android.OS;
 using Android.Support.V7.App;
 using Android.Views;
 using Android.Widget;
-using Java.Lang;
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -54,50 +54,44 @@ namespace AlphaBot
             int id = item.ItemId;
             if(id == Resource.Id.connect)
             {
+                try
+                {
+                    if (objSingle.bluetoothAdapter.thisSocket.IsConnected)
+                    {
+                        Toast.MakeText(this, "Device is already connected.", ToastLength.Short).Show();
+                        return true;
+                    }
+                }
+                catch{}
+
                 Toast.MakeText(this, "Connecting...", ToastLength.Short).Show();
                 objSingle.bluetoothAdapter.getDevice();
 
-                if (objSingle.bluetoothAdapter.thisAdapter.Name != "HC-05")
-                {
-                    Toast.MakeText(this, "AlphaBot not found.", ToastLength.Long).Show();
-                    return true;
-                }
+                objSingle.bluetoothAdapter.thisSocket = 
+                    objSingle
+                    .bluetoothAdapter
+                    .thisDevice
+                    .CreateRfcommSocketToServiceRecord(
+                    Java.Util.UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
 
-                try
+                Task.Run(async () =>
                 {
-                    objSingle.bluetoothAdapter.thisSocket =
-                         objSingle
-                        .bluetoothAdapter
-                        .thisDevice
-                        .CreateRfcommSocketToServiceRecord(
-                             Java.Util.UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
-                    Task.Run(() =>
+                    await objSingle.bluetoothAdapter.thisSocket.ConnectAsync();
+                    RunOnUiThread(() =>
                     {
-                        objSingle.bluetoothAdapter.thisSocket.ConnectAsync();
-                        this.RunOnUiThread(() =>
+                        if (objSingle.bluetoothAdapter.thisSocket.IsConnected)
                         {
-                            if (objSingle.bluetoothAdapter.thisSocket.IsConnected)
-                            {
-                                Toast.MakeText(this, "Connected succesfull.", ToastLength.Short).Show();
-                            }
-                            else
-                            {
-                                Toast.MakeText(this, "Connection failed.", ToastLength.Short).Show();
-                            }
-                        });
-                    });     
-                }
-                catch(System.Exception ex)
-                {
-                    Toast.MakeText(this, "Error.", ToastLength.Short).Show();
-                }
+                            Toast.MakeText(this, "Connected succesfull.", ToastLength.Short).Show();
+                        }
+                    });
+                });
 
                 return true;
             }
             else if(id == Resource.Id.manual)
             {
                 var manualActivity = new Intent(this, typeof(ManualActivity));
-                this.StartActivity(manualActivity);
+                StartActivity(manualActivity);
                 return true;
             }
             return true;
@@ -105,15 +99,23 @@ namespace AlphaBot
 
         private void Send_Click(object sender, EventArgs e)
         {
+            try
+            {
+                if (!objSingle.bluetoothAdapter.thisSocket.IsConnected)
+                {
+                    Toast.MakeText(this, "Device is not connected.", ToastLength.Short).Show();
+                    return;
+                }
+            }
+            catch
+            {
+                Toast.MakeText(this, "Device is not connected.", ToastLength.Short).Show();
+                return;
+            }
+
             TextView PosX = FindViewById<TextView>(Resource.Id.posx);
             TextView PosY = FindViewById<TextView>(Resource.Id.posy);
 
-            if(objSingle.bluetoothAdapter.thisSocket == null)
-            {
-                Toast.MakeText(this, "Device is not connected.", ToastLength.Long).Show();
-                return;
-            }
-            
             if (string.IsNullOrEmpty(PosX.Text) && string.IsNullOrEmpty(PosY.Text) || PosX.Text == "0" && PosY.Text == "0")
             {
                 Toast.MakeText(this, "Can not send empty value.", ToastLength.Long).Show();
